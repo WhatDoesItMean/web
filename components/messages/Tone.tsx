@@ -19,7 +19,7 @@ export function Tone({ tone }: ToneProps) {
     const [title, mask] = get(TONES, tone) ?? ["?", "1"]
     const [hidden, setHidden] = useState<Boolean>(true);
     return (
-        <button className="text-gray-300 hover:text-gray-500 text-xl font-bold" onClick={() => setHidden((v) => {console.log("h", v); return !v})}>
+        <button className="text-gray-300 hover:text-gray-500 min-w-[2rem] whitespace-nowrap text-xl font-bold" onClick={() => setHidden((v) => {console.log("h", v); return !v})}>
             <abbr title={title} className={classnames(styles.tone, hidden && styles.shortened)}>{title.split('').map((char, idx) => {
                 const shouldMask = mask[idx] == "0"
                 return <span key={idx} className={classnames(shouldMask && styles.ghost)}>{char == " " ? '\u00A0' : char}</span>
