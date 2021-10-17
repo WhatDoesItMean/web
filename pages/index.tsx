@@ -1,8 +1,96 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
+import React, { FormEventHandler, useMemo } from 'react'
+
+import { parseString } from 'whatsapp-chat-parser';
+import type { Message } from "whatsapp-chat-parser/types/types";
+import { MessageViewer } from '../components/messages/MessageViewer';
+import { TonalMessage } from '../utils/TonalMessage';
+
+const TONES = [
+  "j", // joking
+  "hj", // half-joking
+  "s", // sarcastic
+  "gen", // or g genuine
+  "srs", // serious
+  "nsrs", // non-serious
+  "pos", // or pc positive connotation
+  "neu", // neutral connotation
+  "neg", // or nc	negative connotation
+  "p", // platonic
+  "r", // romantic
+  "c", // copypasta
+  "l", // or ly	lyrics
+  "lh", // light-hearted
+  "nm", // not mad
+  "lu", // a little upset
+  "nbh", // for when you're vagueposting or venting, but it's directed at nobody here (none of your followers)
+  "nsb", // not subtweeting
+  "sx", // or "x	sexual intent
+  "nsx", // or "nx	non-sexual intent
+  "rh", // or "rt	rhetorical question
+  "t", // teasing
+  "ij", // inside joke
+  "m", // metaphorically
+  "li", // literally
+  "hyp", // hyperbole
+  "f", // fake
+  "th", // threat
+  "cb", // clickbait"
+]
+
+interface FormProps {
+  onSubmit?: FormEventHandler<HTMLFormElement>
+}
+
+const Form: React.FC<FormProps> = ({ onSubmit }) => {
+  return (
+    <form onSubmit={onSubmit}>
+      <label className="block text-left max-w-4xl mt-12 sm:w-full">
+        <h3 className="text-2xl font-bold">Tell me what you're confused about &darr;</h3>
+        <textarea id="messages" className="form-textarea p-6 mt-6 block w-full border rounded-xl hover:text-blue-600 focus:text-blue-600" placeholder="Message Log" />
+      </label>
+      <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold my-2 py-2 px-4 border border-blue-700 rounded">Analyse</button>
+    </form>
+  )
+}
+
+function linkify(messages: Message[]): Message[] {
+  return messages.map((msg) => ({
+    ...msg,
+    message: msg.message.replaceAll(/(https?:.*(?=\s))/g, "[$1]($1)")
+  }))
+}
+
+function tonify(messages: Message[]): TonalMessage[] {
+  return messages.map((msg, idx) => ({
+    ...msg,
+    tone: TONES[idx % TONES.length]
+  }))
+}
 
 const Home: NextPage = () => {
+  const [messages, setMessages] = React.useState<Message[]>([])
+
+  const participants = useMemo(
+    () =>
+      Array.from(new Set(messages.map(({ author }) => author))).filter(
+        author => author !== 'System',
+      ),
+    [messages],
+  );
+
+  const analyseMessage = async (e: React.SyntheticEvent) => {
+      e.preventDefault();
+      const target = e.target as typeof e.target & {
+        messages: { value: string };
+      };
+    const text = target.messages.value
+
+    parseString(text).then(linkify).then(tonify).then(setMessages)
+  }
+
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
@@ -11,17 +99,20 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-      <h1 className="text-6xl font-bold">
+        <h1 className="text-6xl font-bold">
           Welcome to{' '}
           <a className="text-blue-600" href="https://toneindicators.carrd.co/#masterlist">
             Tone Indicators!
           </a>
         </h1>
 
-        <label className="block text-left max-w-4xl mt-12 sm:w-full">
-          <h3 className="text-2xl font-bold">Tell me what you're confused about &darr;</h3>
-          <textarea className="form-textarea p-6 mt-6 block w-full border rounded-xl hover:text-blue-600 focus:text-blue-600" placeholder="Enter some long form content."></textarea>
-        </label>
+        <Form onSubmit={analyseMessage} />
+        <hr/>
+        <MessageViewer
+          messages={messages}
+          participants={participants}
+          activeUser={participants[0]}
+        />
 
       </main>
 
