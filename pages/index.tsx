@@ -5,39 +5,7 @@ import React, { FormEventHandler, useMemo } from 'react'
 import { parseString } from 'whatsapp-chat-parser';
 import type { Message } from "whatsapp-chat-parser/types/types";
 import { MessageViewer } from '../components/messages/MessageViewer';
-import { TonalMessage } from '../utils/TonalMessage';
-
-const TONES = [
-  "j", // joking
-  "hj", // half-joking
-  "s", // sarcastic
-  "gen", // or g genuine
-  "srs", // serious
-  "nsrs", // non-serious
-  "pos", // or pc positive connotation
-  "neu", // neutral connotation
-  "neg", // or nc	negative connotation
-  "p", // platonic
-  "r", // romantic
-  "c", // copypasta
-  "l", // or ly	lyrics
-  "lh", // light-hearted
-  "nm", // not mad
-  "lu", // a little upset
-  "nbh", // for when you're vagueposting or venting, but it's directed at nobody here (none of your followers)
-  "nsb", // not subtweeting
-  "sx", // or "x	sexual intent
-  "nsx", // or "nx	non-sexual intent
-  "rh", // or "rt	rhetorical question
-  "t", // teasing
-  "ij", // inside joke
-  "m", // metaphorically
-  "li", // literally
-  "hyp", // hyperbole
-  "f", // fake
-  "th", // threat
-  "cb", // clickbait"
-]
+import { TonalMessage, TONES } from '../utils/TonalMessage';
 
 interface FormProps {
   onSubmit?: FormEventHandler<HTMLFormElement>
@@ -63,9 +31,10 @@ function linkify(messages: Message[]): Message[] {
 }
 
 function tonify(messages: Message[]): TonalMessage[] {
+  const tones = Object.keys(TONES)
   return messages.map((msg, idx) => ({
     ...msg,
-    tone: TONES[idx % TONES.length]
+    tone: tones[idx % tones.length]
   }))
 }
 
@@ -81,10 +50,10 @@ const Home: NextPage = () => {
   );
 
   const analyseMessage = async (e: React.SyntheticEvent) => {
-      e.preventDefault();
-      const target = e.target as typeof e.target & {
-        messages: { value: string };
-      };
+    e.preventDefault();
+    const target = e.target as typeof e.target & {
+      messages: { value: string };
+    };
     const text = target.messages.value
 
     parseString(text).then(linkify).then(tonify).then(setMessages)
@@ -107,7 +76,7 @@ const Home: NextPage = () => {
         </h1>
 
         <Form onSubmit={analyseMessage} />
-        <hr/>
+        <hr />
         <MessageViewer
           messages={messages}
           participants={participants}

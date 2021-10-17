@@ -1,8 +1,9 @@
-import { Message } from "whatsapp-chat-parser/types/types"
 import classnames from "classnames";
 import moment from "moment";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import { TonalMessage } from "../../utils/TonalMessage";
+import { Tone } from "./Tone";
 
 interface BubbleProps {
   messages: TonalMessage[];
@@ -43,11 +44,8 @@ export function Bubble({ messages, color, isActiveUser }: BubbleProps) {
                   width: "1rem",
                   background: "linear-gradient(to bottom right, rgba(243, 244, 246) 50%, transparent 0)",
                 }}/>
-                <button className="text-gray-300 hover:text-gray-500 text-xl font-bold">
-                  {message.tone ?? "?"}
-                </button>
-              </div>
-              
+                <Tone tone={message.tone}/>
+              </div>   
             ))}
         </div>
     </li>
