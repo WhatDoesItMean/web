@@ -1,6 +1,26 @@
-import { Message } from "whatsapp-chat-parser/types/types";
+import { Attachment } from "./parser/types";
 
-export interface TonalMessage extends Message {
+export interface TonalMessage {
+    /**
+     * The date of the message.
+     */
+    date: Date;
+    /**
+     * The author of the message. Will be `System` for messages without an author.
+     */
+    author: string;
+    /**
+     * The message itself.
+     */
+    message: string;
+    /**
+     * Available for messages containing attachments when setting the option
+     * `parseAttachments` to `true`.
+     */
+    attachment?: Attachment;
+    /**
+     * Manually specified tone.
+     */
     tone?: string;
 }
 
