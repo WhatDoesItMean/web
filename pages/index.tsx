@@ -82,7 +82,7 @@ type Probabilities = {
 function blendProbabilities(messages: TonalMessage[], probabilities: Probabilities[]): TonalMessage[] {
   return messages.map((msg, idx) => {
     const toneProbabilities = probabilities[idx];
-    const argmaxProb = Object.keys(toneProbabilities).reduce((a, b) => obj[a] > obj[b] ? a : b)
+    const argmaxProb = Object.keys(toneProbabilities).reduce((a, b) => toneProbabilities[a as keyof Probabilities] > toneProbabilities[b as keyof Probabilities] ? a : b)
     return {
       ...msg,
       tone: argmaxProb,
@@ -94,11 +94,13 @@ async function externalTonify(messages: TonalMessage[]): Promise<TonalMessage[]>
   const requestOptions = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages })
+    body: JSON.stringify({ messages: messages })
   };
-  return fetch('https://jsonplaceholder.typicode.com/posts/1', requestOptions)
+  console.log(messages);
+  return fetch('https://what-does-it-mean-backend.herokuapp.com/analyze', requestOptions)
       .then(response => response.json())
-      .then(data => blendProbabilities(messages, data));
+      .then(data => blendProbabilities(messages, data))
+      .catch((reason) => { console.error(reason); return messages });
 }
 
 const Home: NextPage = () => {
@@ -118,12 +120,13 @@ const Home: NextPage = () => {
       messages: { value: string };
     };
     const text = target.messages.value
+    const messages =  parseString(text)
+    .then(linkify)
+    .then(tonify)
 
-    parseString(text)
-      .then(linkify)
-      .then(tonify)
-      .then(setMessages)
-      .then(externalTonify)
+    messages.then(setMessages)
+
+    messages.then(externalTonify)
       .then(setMessages)
   }
 
