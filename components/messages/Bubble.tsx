@@ -13,8 +13,8 @@ interface BubbleProps {
 
 export function Bubble({ messages, color, isActiveUser }: BubbleProps) {
   const lastMessage = messages.at(-1)!
-  const dateTime = lastMessage.date.toISOString().slice(0, 19).replace('T', ' ');
-
+  const utcDateTime = lastMessage.date.toISOString().slice(0, 19).replace('T', ' ');
+  
   return (
     <li className={classnames(
       "flex m-3 border-t-md",
@@ -30,7 +30,7 @@ export function Bubble({ messages, color, isActiveUser }: BubbleProps) {
         )} style={{ color: color }}>
           <div className="flex items-baseline">
             <div className="text-sm mx-1">{lastMessage.author}</div>
-            <time dateTime={dateTime} className="text-xs text-gray-400">{moment(dateTime).fromNow()}</time>
+            <time dateTime={utcDateTime} className="text-xs text-gray-400">{moment(lastMessage.date).fromNow()}</time>
           </div>
             {messages.map((message, idx) => (
               <div key={idx} className="flex items-center">

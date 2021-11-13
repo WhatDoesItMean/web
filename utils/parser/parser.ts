@@ -102,8 +102,6 @@ function extractTone<T>(messages: (T & { message: string })[]) {
     
     const [, message, tone] = regexTone.exec(msg.message)!;
 
-    console.log(message, tone)
-
     return {
       ...msg,
       message,
@@ -127,11 +125,22 @@ function interpolateDateTimes<T>(messages: (T & { dateTime: string })[]) {
   }).reverse();    
 }
 
-interface PartialParsedMessage {
+interface ParsedMessageBeforeDateTimeSeparation {
   dateTime: string;
   author: string;
   message: string;
+  tone?: string;
 }
+
+interface ParsedMessage {
+  author: string;
+  message: string;
+  date: string;
+  time: string;
+  tone?: string;
+  ampm?: string;
+}
+
 
 /**
  * Parses and array of raw messages into an array of structured objects.
@@ -144,7 +153,7 @@ function parseMessages(
   const { parseAttachments } = options;
 
   // Parse messages with regex
-  const parsed: PartialParsedMessage[] = messages.map(obj => {
+  const parsed: ParsedMessageBeforeDateTimeSeparation[] = messages.map(obj => {
     const { system, msg } = obj;
 
     // If it's a system message another regex should be used to parse it
@@ -164,16 +173,16 @@ function parseMessages(
   });
 
   // Extract tone if present
-  const withTone: TonalMessage[] = extractTone<PartialParsedMessage>(parsed);
+  const withTone: ParsedMessageBeforeDateTimeSeparation[] = extractTone<ParsedMessageBeforeDateTimeSeparation>(parsed);
 
   // Interpolate dateTime
-  const nonNullDateTimes: TonalMessage[] = interpolateDateTimes<PartialParsedMessage>(withTone)
+  const nonNullDateTimes: ParsedMessageBeforeDateTimeSeparation[] = interpolateDateTimes<ParsedMessageBeforeDateTimeSeparation>(withTone)
 
-  const separatedDateTime: TonalMessage[] = nonNullDateTimes.map(obj => {
+  const separatedDateTime: ParsedMessage[] = nonNullDateTimes.map(obj => {
     const { dateTime } = obj;
     let date = ''
     let time = ''
-    let ampm = null
+    let ampm = undefined
 
     if (regexTimeDate.test(dateTime)) {
       [, time, ampm, date] = regexTimeDate.exec(
@@ -187,7 +196,9 @@ function parseMessages(
     }
 
     return {
-      ...obj,
+      message: obj.message,
+      author: obj.author,
+      tone: obj.tone,
       date,
       time,
       ampm,
@@ -224,9 +235,11 @@ function parseMessages(
       ampm ? convertTime12to24(time, normalizeAMPM(ampm)) : time,
     ).split(regexSplitTime);
 
+    const dateTime = new Date(+year, +month - 1, +day, +hours, +minutes, +seconds);
+
     const finalObject: TonalMessage = {
       ...obj,
-      date: new Date(+year, +month - 1, +day, +hours, +minutes, +seconds),
+      date: dateTime,
       author,
       message,
     };
