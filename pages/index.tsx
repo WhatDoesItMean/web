@@ -96,8 +96,8 @@ async function externalTonify(messages: TonalMessage[]): Promise<TonalMessage[]>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages: messages })
   };
-  console.log(messages);
-  return fetch('https://what-does-it-mean-backend.herokuapp.com/analyze', requestOptions)
+  console.log(messages, process.env);
+  return fetch(`https://${process.env.NEXT_PUBLIC_TONIFY_ENDPOINT}/analyze`, requestOptions)
       .then(response => response.json())
       .then(data => blendProbabilities(messages, data))
       .catch((reason) => { console.error(reason); return messages });
