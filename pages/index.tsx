@@ -79,16 +79,28 @@ type Probabilities = {
   [tone in keyof typeof TONES]: number;
 };
 
-function blendProbabilities(messages: TonalMessage[], probabilities: Probabilities[]): TonalMessage[] {
+type Prediction = keyof typeof TONES;
+
+function blendPrediction(messages: TonalMessage[], predictions: Prediction[]): TonalMessage[] {
   return messages.map((msg, idx) => {
-    const toneProbabilities = probabilities[idx];
-    const argmaxProb = Object.keys(toneProbabilities).reduce((a, b) => toneProbabilities[a as keyof Probabilities] > toneProbabilities[b as keyof Probabilities] ? a : b)
     return {
       ...msg,
-      tone: argmaxProb,
+      tone: predictions[idx]
     }
   })
 }
+
+// Argmax version
+// function blendProbabilities(messages: TonalMessage[], probabilities: Probabilities[]): TonalMessage[] {
+//   return messages.map((msg, idx) => {
+//     const toneProbabilities = probabilities[idx];
+//     const argmaxProb = Object.keys(toneProbabilities).reduce((a, b) => toneProbabilities[a as keyof Probabilities] > toneProbabilities[b as keyof Probabilities] ? a : b)
+//     return {
+//       ...msg,
+//       tone: argmaxProb,
+//     }
+//   })
+// }
 
 async function externalTonify(messages: TonalMessage[]): Promise<TonalMessage[]> {
   const requestOptions = {
@@ -99,7 +111,7 @@ async function externalTonify(messages: TonalMessage[]): Promise<TonalMessage[]>
   console.log(messages, process.env);
   return fetch(`https://${process.env.NEXT_PUBLIC_TONIFY_ENDPOINT}/analyze`, requestOptions)
       .then(response => response.json())
-      .then(data => blendProbabilities(messages, data))
+      .then(data => blendPrediction(messages, data))
       .catch((reason) => { console.error(reason); return messages });
 }
 
